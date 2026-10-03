@@ -1,5 +1,2 @@
-from fastapi import FastAPI
-app=FastAPI()
-@app.get("/")
-def home():
-    return "hello curio"
+"""Compatibility entry point. Prefer uvicorn app.main:app --port 8000."""
+from app.main import app

@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f9fc"><meta name="description" content="Curio — intelligence that understands you, remembers what matters, and helps with what comes next.">
+  <title>Curio · A little more understanding</title>
+  <link rel="icon" href="{{ url_for('static', path='img/curio.svg') }}" type="image/svg+xml">
+  {% for sheet in ['tokens', 'base', 'app', 'chat', 'memory', 'live'] %}<link rel="stylesheet" href="{{ url_for('static', path='css/' + sheet + '.css') }}">{% endfor %}
+</head>
+<body>
+{% block content %}{% endblock %}
+<script id="curio-config" type="application/json">{{ config | tojson }}</script>
+<script type="module" src="{{ url_for('static', path='js/app.js') }}"></script>
+</body>
+</html>

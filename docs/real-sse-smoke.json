@@ -1,0 +1,77 @@
+{
+  "note": "Recorded before the final duplicate-uncertainty sentence cleanup; subsequent regression tests cover that wording change.",
+  "accepted_seconds": 0.055,
+  "request_id": "a1029317-7924-4f1f-ab44-40be85eb5a19",
+  "events": [
+    {
+      "id": "1-0",
+      "event": "run_started",
+      "data": {
+        "request_id": "a1029317-7924-4f1f-ab44-40be85eb5a19"
+      }
+    },
+    {
+      "id": "2-0",
+      "event": "stage",
+      "data": {
+        "stage": "understanding",
+        "message": "Understanding your request\u2026"
+      }
+    },
+    {
+      "id": "3-0",
+      "event": "stage",
+      "data": {
+        "stage": "memory",
+        "message": "Checking relevant context\u2026"
+      }
+    },
+    {
+      "id": "4-0",
+      "event": "stage",
+      "data": {
+        "stage": "reasoning",
+        "message": "Reasoning\u2026"
+      }
+    },
+    {
+      "id": "5-0",
+      "event": "stage",
+      "data": {
+        "stage": "verification",
+        "message": "Verifying the result\u2026"
+      }
+    },
+    {
+      "id": "6-0",
+      "event": "stage",
+      "data": {
+        "stage": "response",
+        "message": "Preparing response\u2026"
+      }
+    },
+    {
+      "id": "7-0",
+      "event": "final",
+      "data": {
+        "answer": "I don\u2019t have the bag\u2019s price, so I can\u2019t confirm whether it fits your \u20b92500 budget.\nPrice is unknown, so I can\u2019t confirm whether this item fits your budget.",
+        "conversation_id": "438003ba-c445-4dde-90ba-b9c91bef40e9",
+        "user_id": "demo-sai"
+      }
+    },
+    {
+      "id": "8-0",
+      "event": "done",
+      "data": {}
+    }
+  ],
+  "duration_seconds": 52.61,
+  "status": {
+    "request_id": "a1029317-7924-4f1f-ab44-40be85eb5a19",
+    "status": "completed",
+    "answer": "I don\u2019t have the bag\u2019s price, so I can\u2019t confirm whether it fits your \u20b92500 budget.\nPrice is unknown, so I can\u2019t confirm whether this item fits your budget.",
+    "conversation_id": "438003ba-c445-4dde-90ba-b9c91bef40e9",
+    "user_id": "demo-sai"
+  },
+  "reconnect_passed": true
+}

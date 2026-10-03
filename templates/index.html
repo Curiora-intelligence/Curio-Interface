@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="app">
+{% include 'components/sidebar.html' %}
+<button class="scrim" id="scrim" aria-label="Close navigation"></button>
+<main class="main">
+  <header class="topbar"><button class="icon-button mobile-menu" id="menu" aria-label="Open navigation">☰</button><div>Personal space <span class="slash">/</span> <span class="muted" id="page-label">A fresh conversation</span></div><button class="status-pill" id="connection-status" title="Check Curio connection">Connecting to Curio</button></header>
+  <div id="notice" class="notice error global-notice" role="status" hidden></div>
+  <section class="chat-stage empty" id="chat-stage" aria-label="Conversation">
+    <div class="welcome" id="welcome"><span class="eyebrow">YOUR WORLD. A LITTLE CLEARER.</span><div class="orb" aria-hidden="true"><div class="orb-core"></div><i></i><i></i><i></i></div><h1>A little more<br><em>understanding.</em></h1><p>For what’s on your mind. And what comes next.</p>
+      <div class="suggestions"><button data-prompt="I prefer spicy chicken biryani and usually stay under ₹300." data-mode="Food"><span class="suggestion-number">01</span><strong>Remember what I like</strong><span>↗</span></button><button data-prompt="Help me choose something that feels like me." data-mode="Shopping"><span class="suggestion-number">02</span><strong>Find my kind of thing</strong><span>↗</span></button><button data-prompt="Mock interview me for a backend internship." data-mode="Interview"><span class="suggestion-number">03</span><strong>Practice what’s next</strong><span>↗</span></button></div>
+    </div>
+    <div id="messages" class="messages" role="log" aria-label="Chat messages"></div>
+  </section>
+  {% include 'components/composer.html' %}
+</main>
+</div>
+{% include 'components/message.html' %}
+{% include 'components/progress.html' %}
+{% include 'components/memory_panel.html' %}
+{% include 'components/live_modal.html' %}
+<dialog id="settings-dialog" class="dialog"><div class="dialog-header"><h2>Your space</h2><button class="icon-button" data-close="settings-dialog" aria-label="Close settings">×</button></div><p class="helper">One identity connects your chats, memories, and Live sessions on this browser.</p><label class="field-label" for="user-id">Demo user ID</label><input id="user-id" class="input" readonly><p class="helper">New Chat keeps this identity and your saved memories. History stays in this browser.</p><button class="secondary" id="location-button">Use my location</button><p id="location-status" class="helper">Location is optional. Nearby results need coordinates.</p><label class="row helper"><input id="show-inspector" type="checkbox" checked> Show confirmed activity</label><p class="helper">Only stages and tool activity reported by Curio appear here.</p></dialog>
+<dialog id="discovery-dialog" class="dialog"><div class="dialog-header"><h2>Find a good fit</h2><button class="icon-button" data-close="discovery-dialog" aria-label="Close discovery">×</button></div><p class="helper">Explore a fictional demo catalogue. Curio ranks the matches and provides the reasons.</p><form id="discovery-form"><label class="field-label" for="category">Looking for</label><select id="category" class="input"><option value="food">Food</option><option value="plumber">A plumber</option><option value="shopping">Shopping</option></select><label class="field-label" for="budget">Maximum budget · ₹</label><input id="budget" class="input" type="number" min="1" placeholder="Optional"><label class="field-label" for="preferences">Preferences</label><input id="preferences" class="input" maxlength="200" placeholder="e.g. spicy chicken biryani"><label class="row helper"><input id="available-today" type="checkbox"> Available today</label><button class="primary" type="submit">Find matches</button></form><div id="discovery-results" aria-live="polite"></div></dialog>
+{% endblock %}

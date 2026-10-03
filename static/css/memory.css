@@ -1,0 +1,96 @@
+.memory-dialog {
+    max-width: 700px
+}
+
+.memory-dialog h2 {
+    margin-top: 10px;
+    font-size: 30px;
+    letter-spacing: -1px
+}
+
+.memory-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 24px
+}
+
+.memory-card {
+    padding: 21px 20px;
+    background: linear-gradient(145deg, #f5f8ff, #fcfdff);
+    border: 1px solid #e6edf6;
+    border-radius: 15px;
+    overflow-wrap: anywhere
+}
+
+.memory-category {
+    font-size: 9px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #8299bc
+}
+
+.memory-card h3 {
+    font-size: 12px;
+    font-weight: 550;
+    color: #73839b;
+    margin: 17px 0 8px
+}
+
+.memory-card p {
+    font-size: 16px;
+    color: #28456e;
+    margin: 0;
+    line-height: 1.6
+}
+
+.memory-empty {
+    grid-column: 1/-1;
+    padding: 40px 20px;
+    text-align: center;
+    color: #8b98ad;
+    font-size: 14px;
+    line-height: 1.9
+}
+
+.recommendation {
+    padding: 18px;
+    margin: 14px 0;
+    background: #f5f8fd;
+    border: 1px solid #e2eaf6;
+    border-radius: 12px
+}
+
+.recommendation h3 {
+    font-size: 14px;
+    margin: 0 0 8px
+}
+
+.recommendation p,
+.recommendation li {
+    font-size: 12px;
+    color: #73839b
+}
+
+.recommendation ul {
+    padding-left: 18px
+}
+
+.recommendation .price {
+    color: var(--blue);
+    font-size: 15px
+}
+
+.memory-grid>.notice {
+    grid-column: 1/-1
+}
+
+@media(max-width:550px) {
+    .memory-grid {
+        grid-template-columns: 1fr
+    }
+
+    .memory-dialog h2 {
+        font-size: 26px
+    }
+}
