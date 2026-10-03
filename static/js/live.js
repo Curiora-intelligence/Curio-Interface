@@ -1,3 +1,4 @@
+import {cancelCurioSpeech} from './voice.js';
 import { $, emit, modes, notice, element } from './config.js';
 import { websocketUrl } from './api.js';
 import { state, setMode, setBusy, addMessage, completeReply, failReply, renderAnswer } from './chat.js';
@@ -25,6 +26,7 @@ export async function captureJPEG(video) {
 export class AudioMeter {
   constructor() { this.generation = 0; this.rms = []; this.speaking = 0; this.pauses = 0; this.duration = 0; }
   async start() {
+    cancelCurioSpeech();
     const generation = ++this.generation;
     if (!navigator.mediaDevices?.getUserMedia) throw Error('Microphone access is not available in this browser.');
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -123,9 +125,11 @@ function handle(event) {
     renderAnswer($('#live-answer'), data.answer); inFlight = null; nextFrame = Date.now() + interval; status('Waiting for your question…');
   }
   if (data.type === 'metrics') showMetrics(data.metrics || {});
+  if (data.type === 'pong') return;
   if (data.type === 'busy' || data.type === 'frame_skipped') {
     if (inFlight === 'reason' && reply) { failReply(reply, 'Curio is still busy. Your question was not accepted; please send it again when ready.'); reply = null; }
-    inFlight = null; nextFrame = Date.now() + interval; status('Curio is busy. Pausing sampled frames…');
+    inFlight = 'backoff'; nextFrame = Date.now() + interval; status('Curio is busy. Pausing sampled frames…');
+    const currentSocket = socket; setTimeout(() => { if (socket === currentSocket && inFlight === 'backoff') { inFlight = null; controls(); } }, interval);
   }
   if (data.type === 'error') {
     const message = data.message || 'Curio could not process that event.'; status(message);
@@ -164,6 +168,7 @@ async function closeLive() {
 }
 function stopDictation() { recognition?.stop(); recognition = null; if (recognitionButton) { recognitionButton.setAttribute('aria-pressed', 'false'); recognitionButton.classList.remove('listening'); } recognitionButton = null; }
 function dictate(target, button) {
+  cancelCurioSpeech();
   if (recognition) { stopDictation(); return; }
   const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!Recognition) { const message = 'Voice typing is not supported in this browser. You can type your question instead.'; if ($('#live-dialog').open) status(message); else notice(message); return; }

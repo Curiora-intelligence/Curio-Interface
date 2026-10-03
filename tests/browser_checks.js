@@ -4,7 +4,7 @@ const report = document.createElement('pre'); report.id = 'browser-check-results
 let passes = 0;
 const pause = (ms) => new Promise(r => setTimeout(r, ms));
 function ok(condition, label) { if (!condition) throw Error(label); passes++; report.textContent += `PASS ${label}\n`; }
-async function until(fn) { for (let i = 0; i < 100; i++) { if (fn()) return; await pause(30); } throw Error('Timed out waiting for browser state'); }
+async function until(fn) { for (let i = 0; i < 260; i++) { if (fn()) return; await pause(30); } throw Error('Timed out waiting for browser state'); }
 function submit(text) { document.querySelector('#message').value = text; document.querySelector('#chat-form').requestSubmit(); }
 try {
   submit('I prefer spicy chicken biryani and usually stay under ₹300.');
@@ -70,6 +70,7 @@ try {
   checks.sockets.at(-1).receive({ type: 'frame_skipped', reason: 'inference_in_progress' });
   const beforeSkip = checks.liveSent.length; await pause(150);
   ok(checks.liveSent.length === beforeSkip && document.querySelector('#live-state').textContent.includes('Pausing'), 'frame_skipped triggers backoff without a stale queue');
+  await until(() => !document.querySelector('#live-mode').disabled);
   document.querySelector('#live-mode').value = 'discovery'; document.querySelector('#live-mode').dispatchEvent(new Event('change'));
   await until(() => !document.querySelector('#live-send').disabled);
   ok(checks.liveSent.filter(e => e.type === 'configure').at(-1).mode === 'discovery', 'Service Discovery sends the existing backend mode');
@@ -91,6 +92,11 @@ try {
   const safe = document.createElement('div'); renderAnswer(safe, '**Bold**\n- One\n<script>window.bad=1</script>\n[Bad](javascript:alert(1))');
   ok(safe.querySelector('strong')?.textContent === 'Bold' && safe.querySelector('li')?.textContent === 'One', 'answer formatting renders emphasis and lists');
   ok(!safe.querySelector('script') && !safe.querySelector('a'), 'answer formatting treats HTML and unsafe links as text');
+  renderAnswer(safe, 'See [restaurant](https://www.zomato.com/hyderabad/example) and https://example.com/menu.');
+  ok(safe.querySelector('.source-link.zomato')?.textContent.includes('Open on Zomato'), 'real source URLs render a Zomato action');
+  ok([...safe.querySelectorAll('a')].every(a => a.target === '_blank' && a.rel.includes('noopener')), 'source links open only on a user click with safe attributes');
+  renderAnswer(safe, '| Option | Price |\n|---|---|\n| **Demo** | ₹280 |');
+  ok(safe.querySelector('th')?.textContent==='Option' && safe.querySelector('td strong')?.textContent==='Demo', 'recommendation tables render safe readable columns');
   document.querySelector('#show-inspector').checked = false; document.querySelector('#show-inspector').dispatchEvent(new Event('change'));
   ok(document.body.classList.contains('hide-inspector'), 'confirmed activity inspector can be hidden');
   report.textContent += `\n${passes} browser checks passed`;

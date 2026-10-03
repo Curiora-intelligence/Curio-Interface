@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', path='css/interview.css') }}">{% endblock %}
+{% block content %}
+<main class="interview-page">
+<header class="interview-header"><a href="/" class="brand small"><img src="{{ url_for('static', path='img/curio.svg') }}" alt="">curio<span class="brand-dot">.</span></a><div class="interview-heading"><span class="eyebrow">A LITTLE PRACTICE. A LITTLE PROGRESS.</span><h1>Mock Interview</h1></div><button class="secondary" id="interview-end">End Interview</button></header>
+<div class="interview-meta"><label for="interview-role">Role <select id="interview-role"><option>Backend / AI Internship</option><option>Backend Engineering Internship</option><option>AI Engineering Internship</option></select></label><span id="interview-count" class="badge">Question 1 of 5</span><span class="spacer"></span><button id="interview-voice" class="text-button" aria-pressed="true">Voice replies ON</button></div>
+<div class="interview-grid">
+<section class="interview-main" aria-label="Interview camera and question">
+  <div class="interview-camera"><video id="interview-camera" autoplay muted playsinline></video><span class="interview-live"><i></i><span id="interview-camera-state">Camera off</span></span><div id="interview-intro" class="interview-intro"><div class="orb" aria-hidden="true"><div class="orb-core"></div><i></i><i></i></div><h2>Let’s work on what’s next.</h2><p>One question at a time, shaped by your goals<br>and what you’d like to improve.</p><button id="interview-start" class="primary">Start interview ↗</button><p class="helper">Camera and microphone are optional.<br>You can type your answers at any time.</p></div></div>
+  <div class="question-card"><div class="row"><span class="eyebrow">YOUR CURRENT QUESTION</span><span class="spacer"></span><button id="read-question" class="text-button" disabled>Read aloud ↗</button></div><div id="interview-question" aria-live="polite">Ready for a fresh perspective?</div><p id="interview-status" class="interview-status" role="status">Start when you’re ready.</p></div>
+  <section id="interview-feedback-section" class="feedback-card" hidden><span class="eyebrow">A USEFUL NEXT STEP</span><h2>Your feedback</h2><div id="interview-feedback" aria-live="polite"></div></section>
+</section>
+<aside class="interview-panel">
+  <div class="row"><h2>Your answer</h2><span class="spacer"></span><span id="interview-mic-state" class="badge">Microphone off</span></div>
+  <label class="sr-only" for="interview-transcript">Interview transcript</label><textarea id="interview-transcript" maxlength="12000" placeholder="Your words will appear here. You can also type or edit your answer." rows="9"></textarea>
+  <div class="interview-actions"><button id="interview-mic" class="secondary" disabled>Start answering</button><button id="interview-finish" class="primary" disabled>Finish Answer ↑</button></div>
+  <p class="helper" id="metrics-help">Only Finish Answer sends your response to Curio.</p>
+  <div class="signal-section"><span class="eyebrow">OBSERVABLE DELIVERY</span><div id="interview-metrics" class="interview-metrics"><span>Speaking pace <strong>—</strong></span><span>Pauses <strong>—</strong></span><span>Speaking ratio <strong>—</strong></span></div><div id="interview-observation" class="interview-observation">Visible gaze and head orientation will appear after a sampled observation.</div><p class="helper">A sparse camera sample describes what is visible at that moment.</p></div>
+  <div class="interview-context"><span class="eyebrow">YOUR CONTEXT CONTINUES</span><div id="interview-memory">Loading your saved interview focus…</div></div>
+  <div id="interview-error" class="notice error" role="status" hidden></div>
+  <div class="row"><button id="retry-media" class="text-button" hidden>Retry camera / microphone</button><button id="retry-interview" class="text-button" hidden>Retry request</button><a href="/" class="text-button" id="back-chat">Back to chat ↗</a></div>
+</aside>
+</div>
+<footer class="interview-footer"><span id="interview-profile">Your personal space</span><span>Five questions. Room to improve.</span><span>By Curiora.</span></footer>
+</main>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ url_for('static', path='js/interview.js') }}"></script>{% endblock %}

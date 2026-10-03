@@ -10,3 +10,8 @@ templates = Jinja2Templates(directory=Path(__file__).resolve().parents[2] / 'tem
 @router.get('/')
 async def home(request: Request):
     return templates.TemplateResponse(request=request, name='index.html', context={'config': Settings().browser_config()})
+
+
+@router.get('/interview')
+async def interview(request: Request):
+    return templates.TemplateResponse(request=request, name='interview.html', context={'config': Settings().browser_config()})

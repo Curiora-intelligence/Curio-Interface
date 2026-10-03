@@ -17,3 +17,10 @@ async def browser_tests(request: Request):
     html = html.replace('<script id="curio-config"', '<script src="/__tests/browser_setup.js"></script><script id="curio-config"')
     html = html.replace('</body>', '<script type="module" src="/__tests/browser_checks.js"></script></body>')
     return html
+
+
+@app.get('/browser-interview-tests', response_class=HTMLResponse)
+async def browser_interview_tests(request: Request):
+    html = templates.env.get_template('interview.html').render(request=request, config=Settings().browser_config())
+    html = html.replace('<script id="curio-config"', '<script src="/__tests/browser_setup.js"></script><script src="/__tests/interview_setup.js"></script><script id="curio-config"')
+    return html.replace('</body>', '<script type="module" src="/__tests/interview_checks.js"></script></body>')

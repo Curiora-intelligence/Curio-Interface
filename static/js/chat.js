@@ -1,3 +1,4 @@
+import {speakCurio, cancelCurioSpeech} from './voice.js';
 import {$, emit, modes, notice, element, storage, userId} from './config.js';
 import {request, runForm, validateImage} from './api.js';
 import {watchRun} from './sse.js';
@@ -37,7 +38,13 @@ function renderActivity(message, node) {
   const container = node.querySelector('.message-activity'); container.replaceChildren();
   if (!message.activity?.length) return;
   const details = $('#progress-template').content.firstElementChild.cloneNode(true);
-  for (const entry of message.activity) details.querySelector('ol').append(element('li','',entry));
+  for (const entry of message.activity) {
+    const row=element('li','activity-step');
+    if(typeof entry==='string')row.append(element('span','',entry));
+    else row.append(element('strong','activity-label',entry.label),element('span','',entry.detail));
+    details.querySelector('ol').append(row);
+  }
+  details.open=message.pending || !!message.activity.some(entry=>typeof entry!=='string');
   container.append(details);
 }
 function updateMessage(message) {
@@ -71,14 +78,14 @@ export function setMode(mode) {
 export function completeReply(reply, data) {
   if (typeof data.answer !== 'string' || !data.conversation_id || data.user_id !== userId) { failReply(reply, 'Curio returned an incomplete response. Reopen this chat to check again.'); return; }
   reply.text = data.answer; reply.pending = false; reply.error = false; state.conversationId = data.conversation_id;
-  updateMessage(reply); save(); storage.remove(pendingKey); setBusy(false); emit('memory-refresh');
+  updateMessage(reply); save(); storage.remove(pendingKey); setBusy(false); emit('memory-refresh'); speakCurio(data.answer,{defaultOn:state.mode==='Interview'});
 }
 export function failReply(reply, message) { reply.text=message; reply.pending=false; reply.error=true; updateMessage(reply); save(); storage.remove(pendingKey); setBusy(false); }
 function follow(id, reply) {
   stopWatching?.();
   stopWatching = watchRun(id, {
-    stage(data) { if (!stageLabels[data.stage]) return; reply.text=stageLabels[data.stage]; reply.activity.push(reply.text); updateMessage(reply); },
-    tool(data) { if (!['started','finished','failed'].includes(data.status)) return; reply.activity.push(`${toolLabels[data.tool] || data.tool} · ${data.status}`); updateMessage(reply); },
+    stage(data) { if (!stageLabels[data.stage]) return; reply.text=stageLabels[data.stage]; if(data.stage==='memory' && data.remembered?.length)reply.activity.push({label:'Remembered',detail:data.remembered.join(' • ')}); else if(!['verification','response'].includes(data.stage))reply.activity.push({label:'Stage',detail:reply.text}); updateMessage(reply); },
+    tool(data) { if (!['started','finished','failed'].includes(data.status)) return; reply.activity.push({label:data.status==='started'?'Using tool':data.status==='finished'?'Verified':'Tool unavailable',detail:data.status==='finished'?`${data.tool} · Tool result returned`:data.tool}); updateMessage(reply); },
     connection(text) { $('#composer-note').textContent = text; },
     final(data) { completeReply(reply,data); },
     error(message) { failReply(reply,message); },
@@ -101,7 +108,7 @@ async function accept(form, reply) {
 }
 export function initChat() {
   $('#chat-form').onsubmit = (event) => {
-    event.preventDefault(); if (state.busy) return;
+    event.preventDefault(); if (state.busy) return; cancelCurioSpeech();
     const text=$('#message').value.trim(); if (!text && !image) return;
     const form=runForm({text, image, conversationId:state.conversationId, mode:modes[state.mode], location:state.location, requestId:crypto.randomUUID()});
     addMessage('user',text + (image ? `\n[Image: ${image.name}]` : '')); const reply=addMessage('assistant','Connecting to Curio…',true);
@@ -111,7 +118,7 @@ export function initChat() {
   $('#new-chat').onclick = () => { if (state.busy) return; stopWatching?.(); state.conversationId=null; state.localId=crypto.randomUUID(); state.messages=[]; $('#message').value=''; clearImage(); notice(); renderAll(); emit('conversation-changed'); emit('memory-refresh'); $('#scrim').click(); $('#message').focus(); };
   $('#history-button').onclick = () => { $('#history-list').scrollIntoView({block:'nearest'}); };
   for (const button of document.querySelectorAll('.mode-tabs button')) button.onclick = () => { if (!state.busy) setMode(button.dataset.mode); };
-  $('#interview-toggle').onclick = () => setMode('Interview');
+  $('#interview-toggle').onclick = () => { window.location.href='/interview'; };
   for (const button of document.querySelectorAll('[data-prompt]')) button.onclick = () => { if(state.busy) return; setMode(button.dataset.mode); $('#message').value=button.dataset.prompt; $('#message').focus(); };
   $('#attach-image').onclick = () => $('#image-file').click();
   $('#image-file').onchange = () => { const file=$('#image-file').files[0]; if (!file) return; try { validateImage(file); image=file; $('#attachment span').textContent=file.name; $('#attachment').hidden=false; notice(); } catch(error) { clearImage(); notice(error.message); } };
@@ -122,29 +129,44 @@ export function initChat() {
 }
 function clearImage() { image=null; $('#image-file').value=''; $('#attachment').hidden=true; }
 
-// A deliberately small Markdown subset, built with DOM nodes rather than HTML.
+// Safe, small Markdown renderer. Source buttons never open automatically.
 export function renderAnswer(container, text) {
-  container.replaceChildren();
-  function inline(parent, value) {
-    const pattern=/(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\(https?:\/\/[^\s)]+\))/g;
-    let cursor=0;
-    for(const match of value.matchAll(pattern)) {
-      parent.append(document.createTextNode(value.slice(cursor,match.index)));
-      const token=match[0];let node;
-      if(token.startsWith('**'))node=element('strong','',token.slice(2,-2));
-      else if(token.startsWith('`'))node=element('code','',token.slice(1,-1));
-      else { const split=token.indexOf('](');node=element('a','',token.slice(1,split));node.href=token.slice(split+2,-1);node.target='_blank';node.rel='noopener noreferrer'; }
-      parent.append(node);cursor=match.index+token.length;
-    }
-    parent.append(document.createTextNode(value.slice(cursor)));
+  container.replaceChildren();const sources=new Map();
+  function link(label,url){
+    const anchor=element('a','',label);
+    try{const parsed=new URL(url);if(!['http:','https:'].includes(parsed.protocol) || parsed.username || parsed.password)throw Error();
+      anchor.href=parsed.href;anchor.target='_blank';anchor.rel='noopener noreferrer';sources.set(parsed.href,parsed.hostname);
+    }catch{return document.createTextNode(label);}
+    return anchor;
   }
-  let list=null,code=null;
-  for(const line of String(text).split('\n')) {
+  function inline(parent,value){
+    const pattern=/(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\(https?:\/\/[^\s)]+\)|https?:\/\/[^\s<>]+|\*[^*]+\*)/g;let cursor=0;
+    for(const match of value.matchAll(pattern)){
+      parent.append(document.createTextNode(value.slice(cursor,match.index)));const token=match[0];let node;
+      if(token.startsWith('**'))node=element('strong','',token.slice(2,-2));
+      else if(token.startsWith('*'))node=element('em','',token.slice(1,-1));
+      else if(token.startsWith('`'))node=element('code','',token.slice(1,-1));
+      else if(token.startsWith('[')){const split=token.indexOf('](');node=link(token.slice(1,split),token.slice(split+2,-1));}
+      else {const url=token.replace(/[.,;!?)]+$/,'');node=link(url,url);}
+      parent.append(node);cursor=match.index+token.length;
+    }parent.append(document.createTextNode(value.slice(cursor)));
+  }
+  let list=null,code=null;const lines=String(text).split('\n');
+  const cells=line=>line.trim().replace(/^\|/,'').replace(/\|$/,'').split('|').map(value=>value.trim());
+  for(let index=0;index<lines.length;index++){
+    const line=lines[index];
     if(line.trim().startsWith('```')){if(code)code=null;else{code=element('pre','answer-code','');container.append(code);}list=null;continue;}
-    if(code){code.textContent+=line+'\n';continue;}
-    if(!line.trim()){list=null;continue;}
+    if(code){code.textContent+=line+'\n';continue;}if(!line.trim()){list=null;continue;}
+    if(line.trim().startsWith('|') && /^\s*\|(?:\s*:?-{3,}:?\s*\|)+\s*$/.test(lines[index+1]||'')){
+      const scroll=element('div','answer-table-scroll'),table=element('table','answer-table'),head=element('thead'),body=element('tbody'),row=element('tr');
+      scroll.tabIndex=0;scroll.setAttribute('aria-label','Answer table');
+      for(const value of cells(line)){const cell=element('th');cell.scope='col';inline(cell,value);row.append(cell);}head.append(row);table.append(head,body);index++;
+      while(index+1<lines.length && lines[index+1].trim().startsWith('|')){const row=element('tr');for(const value of cells(lines[++index])){const cell=element('td');inline(cell,value);row.append(cell);}body.append(row);}
+      scroll.append(table);container.append(scroll);list=null;continue;
+    }
     const bullet=line.match(/^\s*(?:[-*]|\d+\.)\s+(.+)/);
     if(bullet){if(!list){list=element('ul');container.append(list);}const item=element('li');inline(item,bullet[1]);list.append(item);}
     else{list=null;const heading=line.match(/^#{1,4}\s+(.+)/);const paragraph=element(heading?'h3':'p');inline(paragraph,heading?heading[1]:line);container.append(paragraph);}
   }
+  if(sources.size){const cards=element('div','source-links');for(const [url,host] of sources){const zomato=host==='zomato.com'||host.endsWith('.zomato.com');const button=link(zomato?'Open on Zomato ↗':`Open ${host} ↗`,url);button.className='source-link'+(zomato?' zomato':'');cards.append(button);}container.append(cards);}
 }

@@ -6,10 +6,11 @@
   <title>Curio · A little more understanding</title>
   <link rel="icon" href="{{ url_for('static', path='img/curio.svg') }}" type="image/svg+xml">
   {% for sheet in ['tokens', 'base', 'app', 'chat', 'memory', 'live'] %}<link rel="stylesheet" href="{{ url_for('static', path='css/' + sheet + '.css') }}">{% endfor %}
+{% block extra_head %}{% endblock %}
 </head>
 <body>
 {% block content %}{% endblock %}
 <script id="curio-config" type="application/json">{{ config | tojson }}</script>
-<script type="module" src="{{ url_for('static', path='js/app.js') }}"></script>
+{% block scripts %}<script type="module" src="{{ url_for('static', path='js/app.js') }}"></script>{% endblock %}
 </body>
 </html>

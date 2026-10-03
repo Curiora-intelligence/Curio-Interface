@@ -1,3 +1,4 @@
+import {bindVoiceToggle} from './voice.js';
 import {$, userId} from './config.js';
 import {initChat} from './chat.js';
 import {initMemory} from './memory.js';
@@ -15,6 +16,7 @@ for (const button of document.querySelectorAll('[data-close]')) button.onclick =
 initChat();
 initMemory();
 initLive();
+bindVoiceToggle($('#voice-toggle'));
 
 const inspector=storage.read('curio_inspector',true);
 $('#show-inspector').checked=inspector;document.body.classList.toggle('hide-inspector',!inspector);
